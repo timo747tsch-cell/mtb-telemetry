@@ -1,0 +1,86 @@
+name: Build Electron app (Windows, macOS, Linux)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    name: Build (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install root dependencies
+        run: npm ci
+      - name: Install renderer dependencies
+        run: |
+          cd renderer
+          npm ci
+      - name: Build renderer (production)
+        run: |
+          cd renderer
+          npm run build
+      - name: Build electron (linux)
+        run: npx electron-builder --linux --publish never
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-dist
+          path: dist/*
+
+  build-windows:
+    name: Build (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: npm ci
+      - name: Install renderer deps
+        run: cd renderer && npm ci
+      - name: Build renderer (production)
+        run: cd renderer && npm run build
+      - name: Build electron (windows)
+        run: npx electron-builder --win --x64 --publish never
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-dist
+          path: dist/*
+
+  build-macos:
+    name: Build (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: npm ci
+      - name: Install renderer deps
+        run: cd renderer && npm ci
+      - name: Build renderer (production)
+        run: cd renderer && npm run build
+      - name: Build electron (mac)
+        run: npx electron-builder --mac --publish never
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-dist
+          path: dist/*
